@@ -38,6 +38,8 @@ General
 - When writing abbreviations in ``snake_case`` use lowercase: ``http_address``
 - When writing numbers in ``snake_case``
   do not use extra ``_`` before numbers as in ``http2_protocol``
+- Enforce variable naming consistency. If there is a variable named ``x1`` there
+  should not be just ``x`` in the current scope
 
 Packages
 ~~~~~~~~
@@ -132,6 +134,7 @@ Summary
    WrongUnusedVariableNameViolation
    UnreadableNameViolation
    BuiltinShadowingViolation
+   UnNumberedNameWithNumberedNameViolation
 
 Module names
 ------------
@@ -159,6 +162,7 @@ General names
 .. autoclass:: WrongUnusedVariableNameViolation
 .. autoclass:: UnreadableNameViolation
 .. autoclass:: BuiltinShadowingViolation
+.. autoclass:: UnNumberedNameWithNumberedNameViolation
 
 """
 
@@ -860,3 +864,33 @@ class BuiltinShadowingViolation(ASTViolation):
 
     error_template = 'Found builtin shadowing: {0}'
     code = 125
+
+
+@final
+class UnNumberedNameWithNumberedNameViolation(ASTViolation):
+    """
+    Forbid use of unnumbered name with a numbered one in the same scope.
+
+    Reasoning:
+        While just ``x`` and ``x1`` with ``x2`` are totally fine,
+        there should not be just ``x`` with ``x1`` in the current scope.
+
+    Solution:
+        Rename your unnumbered variable to contain number.
+
+    Example::
+
+        # Correct:
+        some_var1 = 1
+        some_var2 = 2
+
+        # Wrong:
+        some_var = 1
+        some_var2 = 2
+
+    .. versionadded:: 0.14
+
+    """
+
+    error_template = 'Found an unnumbered name with a numbered name: {0}'
+    code = 126
