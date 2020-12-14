@@ -521,3 +521,46 @@ class UnusedVariableUsageVisitor(BaseNodeVisitor):
             self.add_violation(
                 naming.UnusedVariableIsUsedViolation(node, text=assigned_name),
             )
+
+@final
+@alias('visit_any_assign', (
+    'visit_Assign',
+    'visit_AnnAssign',
+    'visit_NamedExpr',
+))
+class UnNumberedNameWithNumberedNameVisitor(BaseNodeVisitor):
+    """Checks how variables are named."""
+
+    def visit_any_assign(self, node: AnyAssignWithWalrus) -> None:
+        """
+        Checks that we cannot name unnumbered with numbered variables.
+
+        Raises:
+            UnNumberedNameWithNumberedNameViolation
+
+        """
+        
+        self._check_unnumbered_with_numbered(
+            node,
+            name_nodes.flat_variable_names([node]),
+        )
+        self.generic_visit(node)
+        
+    def _check_unnumbered_with_numbered(
+        self,
+        node: ast.AST,
+        all_names: Iterable[str],
+        *,
+    ) -> None:
+        all_names = list(all_names)  # we are using it twice
+        
+        for name1 in all_names:
+            for name2 in all_names:
+                if name1[:-1] == name2:
+                    naming.UnNumberedNameWithNumberedNameViolation(
+                        node, text=name2,
+                    )
+                elif name1 == name2[:-1]:
+                    naming.UnNumberedNameWithNumberedNameViolation(
+                        node, text=name1,
+                    )
